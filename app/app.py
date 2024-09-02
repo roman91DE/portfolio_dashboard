@@ -10,7 +10,7 @@ from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
 from app.data.portfolio_utils import (create_asset_allocation_chart,
                                       create_sector_breakdown_chart,
-                                      fetch_portfolio_data)
+                                      fetch_portfolio_data, calculate_portfolio_metrics)
 
 # Load environment variables from .env file
 load_dotenv(Path(".env"))
@@ -42,12 +42,14 @@ app_ui = ui.page_fluid(
         ui.output_table("portfolio_table"),
         ui.output_plot("asset_allocation_chart"),
         ui.output_plot("sector_breakdown_chart"),
+        ui.output_table("portfolio_metrics"),
     )
 )
 
 
 def server(input: Inputs, output: Outputs, session: Session):
     row_count = reactive.Value(1)
+    portfolio_metrics_value = reactive.Value(None)  # Renamed from portfolio_metrics
     data_fetched = reactive.Value(None)
 
     @reactive.Effect
@@ -88,6 +90,8 @@ def server(input: Inputs, output: Outputs, session: Session):
         symbols, shares = get_portfolio_data()
         data = fetch_portfolio_data(symbols, shares, API_KEY)
         data_fetched.set(data)
+        metrics = calculate_portfolio_metrics(data)
+        portfolio_metrics_value.set(metrics)  # Updated to use the new name
 
     @output
     @render.table
@@ -113,6 +117,14 @@ def server(input: Inputs, output: Outputs, session: Session):
         if data is None or data.empty:
             return None
         return create_sector_breakdown_chart(data)
+    
+    @output
+    @render.table
+    def portfolio_metrics():
+        metrics = portfolio_metrics_value.get()  # Use the new name
+        if metrics is None:
+            return pd.DataFrame({"Message": ["No metrics available. Please fetch data."]})
+        return metrics  # This should now be the DataFrame returned by calculate_portfolio_metrics
 
 
 # Create the Shiny app

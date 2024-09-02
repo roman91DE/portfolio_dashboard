@@ -79,3 +79,17 @@ def create_sector_breakdown_chart(df: pd.DataFrame) -> plt.Figure:
     ax.axis('equal')
     plt.title("Sector Breakdown")
     return fig
+
+
+def calculate_portfolio_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    total_value = df['Total Value'].sum()
+    
+    metrics = {
+        'Total Portfolio Value': total_value,
+        'Number of Assets': len(df),
+        'Average Asset Value': total_value / len(df) if len(df) > 0 else 0,
+        'Highest Value Asset': df.loc[df['Total Value'].idxmax(), 'Symbol'] if not df.empty else 'N/A',
+        'Lowest Value Asset': df.loc[df['Total Value'].idxmin(), 'Symbol'] if not df.empty else 'N/A',
+    }
+    
+    return pd.DataFrame(list(metrics.items()), columns=['Metric', 'Value'])
