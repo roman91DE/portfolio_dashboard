@@ -51,4 +51,4 @@ junit-xml/
 app/static/
 
 # database
-database/*.db
+database/*.dbdatabase/stock_data.db
