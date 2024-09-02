@@ -55,3 +55,4 @@ database/*.dbdatabase/stock_data.db
 
 # log files
 logs/
+buf.txt

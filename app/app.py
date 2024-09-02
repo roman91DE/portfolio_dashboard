@@ -9,6 +9,7 @@ from plotly.io import to_image
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
 from app.data.portfolio_utils import (create_asset_allocation_chart,
+                                      create_sector_breakdown_chart,
                                       fetch_portfolio_data)
 
 # Load environment variables from .env file
@@ -40,6 +41,7 @@ app_ui = ui.page_fluid(
         ui.input_action_button("fetch", "Fetch Data", class_="btn-success mt-2 ml-2"),
         ui.output_table("portfolio_table"),
         ui.output_plot("asset_allocation_chart"),
+        ui.output_plot("sector_breakdown_chart"),
     )
 )
 
@@ -103,6 +105,14 @@ def server(input: Inputs, output: Outputs, session: Session):
             return None
         fig = create_asset_allocation_chart(data)
         return fig
+    
+    @output
+    @render.plot
+    def sector_breakdown_chart():
+        data = data_fetched.get()
+        if data is None or data.empty:
+            return None
+        return create_sector_breakdown_chart(data)
 
 
 # Create the Shiny app

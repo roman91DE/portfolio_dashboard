@@ -66,3 +66,16 @@ def create_asset_allocation_chart(df: pd.DataFrame) -> plt.Figure:
     ax.axis("equal")
     plt.title("Asset Allocation")
     return fig
+
+
+def create_sector_breakdown_chart(df: pd.DataFrame) -> plt.Figure:
+    if "Error" in df.columns:
+        return plt.Figure()
+
+    sector_allocation = df.groupby("Sector")["Total Value"].sum().reset_index()
+
+    fig, ax = plt.subplots()
+    ax.pie(sector_allocation["Total Value"], labels=sector_allocation["Sector"], autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    plt.title("Sector Breakdown")
+    return fig
