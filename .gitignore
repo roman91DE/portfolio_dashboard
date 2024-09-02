@@ -49,3 +49,6 @@ junit-xml/
 
 # Static assets
 app/static/
+
+# database
+database/*.db
