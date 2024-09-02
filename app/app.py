@@ -2,81 +2,107 @@ import os
 from logging import getLogger
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from dotenv import load_dotenv
-from shiny import App, Inputs, Outputs, Session, render, ui
+from plotly.io import to_image
+from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
-from app.data.fetch_data import fetch_stock_data
-from app.data.portfolio_utils import create_portfolio_dataframe
+from app.data.portfolio_utils import (create_asset_allocation_chart,
+                                      fetch_portfolio_data)
 
 # Load environment variables from .env file
 load_dotenv(Path(".env"))
 logger = getLogger(__name__)
 
 # Get the API key from environment variables
-API_KEY_ENV = os.getenv("ALPHA_VANTAGE_API_KEY")
-if not API_KEY_ENV:
+API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+if not API_KEY:
     raise ValueError("ALPHA_VANTAGE_API_KEY is not set")
-API_KEY = API_KEY_ENV
 
 # Define UI
 app_ui = ui.page_fluid(
-    ui.input_text_area(
-        "tickers", "Enter Tickers/ISINs (comma-separated)", value="AAPL,GOOGL"
-    ),
-    ui.input_text_area(
-        "shares", "Enter Number of Shares (comma-separated)", value="10,5"
-    ),
-    ui.input_action_button("fetch", "Fetch Data"),
-    ui.output_table("portfolio_table"),
+    ui.div(
+        ui.h2("Portfolio Tracker"),
+        ui.div(
+            ui.row(
+                ui.column(
+                    6,
+                    ui.input_text("symbol_0", "Stock Symbol", placeholder="e.g., AAPL"),
+                ),
+                ui.column(
+                    6, ui.input_numeric("shares_0", "Number of Shares", value=1, min=1)
+                ),
+            ),
+            id="input-container",
+        ),
+        ui.input_action_button("add_row", "Add Row", class_="btn-primary mt-2"),
+        ui.input_action_button("fetch", "Fetch Data", class_="btn-success mt-2 ml-2"),
+        ui.output_table("portfolio_table"),
+        ui.output_plot("asset_allocation_chart"),
+    )
 )
 
 
-# Define server logic
-def server(input: Inputs, output: Outputs, session: Session) -> None:
+def server(input: Inputs, output: Outputs, session: Session):
+    row_count = reactive.Value(1)
+    data_fetched = reactive.Value(None)
+
+    @reactive.Effect
+    @reactive.event(input.add_row)
+    def add_input_row():
+        current_count = row_count.get()
+        ui.insert_ui(
+            selector="#input-container",
+            where="beforeEnd",
+            ui=ui.row(
+                ui.column(
+                    6,
+                    ui.input_text(
+                        f"symbol_{current_count}",
+                        "Stock Symbol",
+                        placeholder="e.g., AAPL",
+                    ),
+                ),
+                ui.column(
+                    6,
+                    ui.input_numeric(
+                        f"shares_{current_count}", "Number of Shares", value=1, min=1
+                    ),
+                ),
+            ),
+        )
+        row_count.set(current_count + 1)
+
+    @reactive.Calc
+    def get_portfolio_data():
+        symbols = [input[f"symbol_{i}"]() for i in range(row_count.get())]
+        shares = [input[f"shares_{i}"]() for i in range(row_count.get())]
+        return symbols, shares
+
+    @reactive.Effect
+    @reactive.event(input.fetch)
+    def fetch_data():
+        symbols, shares = get_portfolio_data()
+        data = fetch_portfolio_data(symbols, shares, API_KEY)
+        data_fetched.set(data)
+
     @output
     @render.table
-    def portfolio_table() -> pd.DataFrame:
-        try:
-            tickers = input.tickers().split(",")
-            shares = list(map(int, input.shares().split(",")))
+    def portfolio_table():
+        data = data_fetched.get()
+        if data is None or data.empty:
+            return pd.DataFrame({"Message": ["No data available. Please fetch data."]})
+        return data
 
-            if len(tickers) != len(shares):
-                return pd.DataFrame(
-                    {
-                        "Error": [
-                            "The number of tickers/ISINs must match the number of shares."
-                        ]
-                    }
-                )
-
-            portfolio_data = []
-            for ticker, share in zip(tickers, shares):
-                try:
-                    df, overview = fetch_stock_data(ticker.strip(), API_KEY)
-                    latest_data = df.iloc[0]
-                    portfolio_data.append(
-                        {
-                            "Ticker/ISIN": ticker.strip(),
-                            "Name": overview["Name"],
-                            "Asset Type": overview["AssetType"],
-                            "Sector": overview["Sector"],
-                            "Shares": share,
-                            "Latest Close": latest_data["close"],
-                        }
-                    )
-                except ValueError as e:
-                    logger.error(
-                        f"Error processing Alpha Vantage data for {ticker}: {e}"
-                    )
-                    portfolio_data.append(
-                        {"Ticker/ISIN": ticker.strip(), "Error": str(e)}
-                    )
-
-            return create_portfolio_dataframe(portfolio_data)
-        except Exception as e:
-            logger.error(f"Error in portfolio_table: {e}")
-            return pd.DataFrame({"Error": [str(e)]})
+    @output
+    @render.plot
+    def asset_allocation_chart():
+        data = data_fetched.get()
+        if data is None or data.empty:
+            return None
+        fig = create_asset_allocation_chart(data)
+        return fig
 
 
 # Create the Shiny app
