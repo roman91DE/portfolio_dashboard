@@ -29,10 +29,14 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 python run.py [-h] [-d] [-p PORT]
 ```
 
-Command line options:
-  -h, --help            show help message and exit
-  -d, --debug           Run in debug mode
-  -p PORT, --port PORT  Port to run the app on
+### Command Line Options
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message and exit |
+| `-d, --debug` | Run in debug mode |
+| `-p PORT, --port PORT` | Specify the port to run the app on |
+
 
 5. Open your browser and navigate to `http://localhost:5173`
 
