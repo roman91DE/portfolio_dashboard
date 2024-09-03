@@ -10,12 +10,13 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 
 ## Demo
 
+### Portfolio Dashboard
 ![Portfolio Dashboard](./demo_pics/dashboard.png)
-An example dashboard displaying a portfolio of stocks.
+*An example dashboard displaying a portfolio of stocks.*
 
-
-![Portfolio Dashboard](./demo_pics/portfolio_input.png)
-Input options and a resume table of the portfolio.
+### Input Overview
+![Input Overview](./demo_pics/input_overview.png)
+*Input options and a summary table of the portfolio.*
 
 ## Setup
 
