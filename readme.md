@@ -23,7 +23,17 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 1. Clone the repository
 2. Install dependencies
 3. Set up your Alpha Vantage API key
-4. Run the application with `python run.py [-d]`
+4. Run the application with:
+
+```bash
+python run.py [-h] [-d] [-p PORT]
+```
+
+Command line options:
+  -h, --help            show help message and exit
+  -d, --debug           Run in debug mode
+  -p PORT, --port PORT  Port to run the app on
+
 5. Open your browser and navigate to `http://localhost:5173`
 
 ## Usage
