@@ -51,8 +51,11 @@ junit-xml/
 app/static/
 
 # database
-database/*.dbdatabase/stock_data.db
+database/stock_data.db
 
 # log files
 logs/
 buf.txt
+
+# csv files
+csv_examples/personal.csv
