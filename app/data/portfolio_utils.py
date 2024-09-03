@@ -2,6 +2,8 @@ from typing import Dict, List, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import json
+from pathlib import Path
 
 from app.data.fetch_data import fetch_stock_data
 
@@ -93,3 +95,42 @@ def calculate_portfolio_metrics(df: pd.DataFrame) -> pd.DataFrame:
     }
     
     return pd.DataFrame(list(metrics.items()), columns=['Metric', 'Value'])
+
+
+def create_portfolio_performance_chart(portfolio_data):
+    all_data = pd.DataFrame()
+    total_value = pd.Series(dtype=float)
+
+    for symbol, data in portfolio_data.items():
+        with open(Path(f'logs/ts_data_{symbol}.json')) as f:
+            stock_data = json.load(f)
+        
+        df = pd.DataFrame(stock_data['Time Series (Daily)']).T
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+        
+        close_prices = df['4. close'].astype(float) * data['shares']
+        all_data[symbol] = close_prices
+        
+        if total_value.empty:
+            total_value = close_prices
+        else:
+            total_value = total_value.add(close_prices, fill_value=0)
+
+    all_data['Total Portfolio'] = total_value
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    for column in all_data.columns:
+        if column == 'Total Portfolio':
+            ax.plot(all_data.index, all_data[column], label=column, linewidth=3, color='black')
+        else:
+            ax.plot(all_data.index, all_data[column], label=column)
+
+    ax.set_title('Portfolio Performance Over Time')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Value ($)')
+    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    ax.grid(True)
+    plt.tight_layout()
+
+    return fig
