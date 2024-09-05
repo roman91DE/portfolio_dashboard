@@ -121,4 +121,10 @@ def fetch_overview_from_api(symbol: str, api_key: str) -> dict:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(json.dumps(overview_data, indent=2))
 
+    # Check for API limit reached
+    if "Information" in overview_data and "standard API rate limit" in overview_data["Information"]:
+        raise APILimitReachedException(
+            "Alpha Vantage API daily limit reached. Please try again tomorrow or upgrade to a premium plan."
+        )
+
     return overview_data

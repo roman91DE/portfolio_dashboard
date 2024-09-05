@@ -95,12 +95,14 @@ def calculate_portfolio_metrics(df: pd.DataFrame) -> pd.DataFrame:
         "Total Portfolio Value": total_value,
         "Number of Assets": len(df),
         "Average Asset Value": total_value / len(df) if len(df) > 0 else 0,
-        "Highest Value Asset": (
-            df.loc[df["Total Value"].idxmax(), "Symbol"] if not df.empty else "N/A"
-        ),
-        "Lowest Value Asset": (
-            df.loc[df["Total Value"].idxmin(), "Symbol"] if not df.empty else "N/A"
-        ),
+        "Highest Value Asset": df.loc[df["Total Value"].idxmax(), "Symbol"] if not df.empty else "N/A",
+        "Lowest Value Asset": df.loc[df["Total Value"].idxmin(), "Symbol"] if not df.empty else "N/A",
+        "Most Shares Held": df.loc[df["Shares"].idxmax(), "Symbol"] if not df.empty else "N/A",
+        "Least Shares Held": df.loc[df["Shares"].idxmin(), "Symbol"] if not df.empty else "N/A",
+        "Highest Price Asset": df.loc[df["Latest Close"].idxmax(), "Symbol"] if not df.empty else "N/A",
+        "Lowest Price Asset": df.loc[df["Latest Close"].idxmin(), "Symbol"] if not df.empty else "N/A",
+        "Number of Sectors": df["Sector"].nunique() if "Sector" in df.columns else "N/A",
+        "Most Represented Sector": df.groupby("Sector")["Total Value"].sum().idxmax() if "Sector" in df.columns else "N/A",
     }
 
     return pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"])

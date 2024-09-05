@@ -26,7 +26,7 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 4. Run the application with:
 
 ```bash
-python run.py [-h] [-d] [-p PORT]
+python3 run.py [-h] [-d] [-p PORT]
 ```
 
 ### Command Line Options
@@ -35,10 +35,10 @@ python run.py [-h] [-d] [-p PORT]
 |--------|-------------|
 | `-h, --help` | Show help message and exit |
 | `-d, --debug` | Run in debug mode |
-| `-p PORT, --port PORT` | Specify the port to run the app on |
+| `-p PORT, --port PORT` | Specify the port to run the app on (default: 8000) |
 
 
-5. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:8000` (or the port you specified)
 
 ## Usage
 
