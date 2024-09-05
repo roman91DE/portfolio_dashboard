@@ -10,9 +10,9 @@ from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
 
 from app.data.portfolio_utils import (calculate_portfolio_metrics,
-                                      create_asset_allocation_chart,
                                       create_portfolio_performance_chart,
                                       create_sector_breakdown_chart,
+                                      create_risk_return_chart,
                                       fetch_portfolio_data)
 
 # Load environment variables from .env file
@@ -79,20 +79,17 @@ app_ui = ui.page_fluid(
         ),
         ui.hr(),
         ui.row(
-            ui.column(12, ui.output_table("portfolio_table")),
+            ui.column(12, ui.div(ui.output_table("portfolio_table"), class_="mb-5")),
         ),
         ui.row(
-            ui.column(12, ui.output_plot("portfolio_performance")),
+            ui.column(12, ui.div(ui.output_plot("portfolio_performance"), class_="mb-5")),
         ),
         ui.row(
-            ui.column(
-                8,
-                ui.row(
-                    ui.column(6, ui.output_plot("asset_allocation_chart")),
-                    ui.column(6, ui.output_plot("sector_breakdown_chart")),
-                ),
-            ),
-            ui.column(4, ui.output_table("portfolio_metrics")),
+            ui.column(12, ui.div(ui.output_plot("risk_return_chart"), class_="mb-5")),
+        ),
+        ui.row(
+            ui.column(6, ui.div(ui.output_plot("sector_breakdown_chart"), class_="mb-5 pe-3")),
+            ui.column(6, ui.div(ui.output_table("portfolio_metrics"), class_="mb-5 ps-3")),
         ),
     )
 )
@@ -253,14 +250,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             return pd.DataFrame({"Message": ["No data available. Please fetch data."]})
         return data
 
-    @output
-    @render.plot
-    def asset_allocation_chart():
-        data = data_fetched.get()
-        if data is None or data.empty:
-            return None
-        fig = create_asset_allocation_chart(data)
-        return fig
+
 
     @output
     @render.plot
@@ -283,10 +273,16 @@ def server(input: Inputs, output: Outputs, session: Session):
     @output
     @render.plot
     def portfolio_performance():
-        chart = portfolio_performance_chart.get()
-        if chart is None:
+        return portfolio_performance_chart.get()
+
+    @output
+    @render.plot(alt="Risk-Return Analysis")
+    def risk_return_chart():
+        data = data_fetched.get()
+        if data is None or data.empty:
             return None
-        return chart
+        return create_risk_return_chart(data)
+
 
 
 # Create the Shiny app

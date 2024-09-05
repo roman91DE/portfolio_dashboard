@@ -72,21 +72,23 @@ def fetch_stock_data(symbol: str, api_key: str) -> tuple[pd.DataFrame, dict]:
 
     conn.close()
 
-    # Process data and return as before
+    # Process data and return
     if "Time Series (Daily)" in ts_data:
         df = pd.DataFrame(ts_data["Time Series (Daily)"]).T
         df.columns = ["open", "high", "low", "close", "volume"]
         df.index = pd.to_datetime(df.index)
 
-        # Extract relevant information from overview data
-        overview_info = {
-            "AssetType": overview_data.get("AssetType", "Unknown"),
-            "Sector": overview_data.get("Sector", "Unknown"),
-            "Industry": overview_data.get("Industry", "Unknown"),
-            "Name": overview_data.get("Name", symbol),
-        }
+        # Calculate 52-week change
+        if len(df) >= 252:  # Approximately 252 trading days in a year
+            current_price = df['close'].iloc[0]
+            year_ago_price = df['close'].iloc[251]
+            week_52_change = (current_price - year_ago_price) / year_ago_price
+            overview_data['52WeekChange'] = f"{week_52_change:.4f}"
+        else:
+            overview_data['52WeekChange'] = "N/A"
 
-        return df, overview_info
+        # Return all overview data
+        return df, overview_data
     elif "Error Message" in ts_data:
         raise ValueError(f"Alpha Vantage API error: {ts_data['Error Message']}")
     else:
