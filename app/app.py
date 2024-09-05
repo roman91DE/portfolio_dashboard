@@ -9,11 +9,13 @@ from dotenv import load_dotenv
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 from shiny.types import FileInfo
 
-from app.data.portfolio_utils import (calculate_portfolio_metrics,
-                                      create_portfolio_performance_chart,
-                                      create_sector_breakdown_chart,
-                                      create_risk_return_chart,
-                                      fetch_portfolio_data)
+from app.data.portfolio_utils import (
+    calculate_portfolio_metrics,
+    create_portfolio_performance_chart,
+    create_sector_breakdown_chart,
+    create_risk_return_chart,
+    fetch_portfolio_data,
+)
 
 # Load environment variables from .env file
 load_dotenv(Path(".env"))
@@ -79,17 +81,49 @@ app_ui = ui.page_fluid(
         ),
         ui.hr(),
         ui.row(
-            ui.column(12, ui.div(ui.output_table("portfolio_table"), class_="mb-5")),
+            ui.column(
+                12,
+                ui.tooltip(
+                    ui.div(ui.output_plot("portfolio_performance"), class_="mb-5"),
+                    "This chart displays the historical performance of your portfolio and individual stocks over time.",
+                ),
+            ),
         ),
         ui.row(
-            ui.column(12, ui.div(ui.output_plot("portfolio_performance"), class_="mb-5")),
+            ui.column(
+                12,
+                ui.tooltip(
+                    ui.div(ui.output_plot("risk_return_chart"), class_="mb-5"),
+                    "This scatter plot shows the risk-return profile of your stocks. Beta (x-axis) represents risk, while 52-week change (y-axis) represents return.",
+                ),
+            ),
         ),
         ui.row(
-            ui.column(12, ui.div(ui.output_plot("risk_return_chart"), class_="mb-5")),
+            ui.column(
+                6,
+                ui.tooltip(
+                    ui.div(
+                        ui.output_plot("sector_breakdown_chart"), class_="mb-5 pe-3"
+                    ),
+                    "This chart illustrates the distribution of your portfolio across different sectors.",
+                ),
+            ),
+            ui.column(
+                6,
+                ui.tooltip(
+                    ui.div(ui.output_table("portfolio_metrics"), class_="mb-5 ps-3"),
+                    "This table provides key metrics about your portfolio, including total value, number of assets, and sector information.",
+                ),
+            ),
         ),
         ui.row(
-            ui.column(6, ui.div(ui.output_plot("sector_breakdown_chart"), class_="mb-5 pe-3")),
-            ui.column(6, ui.div(ui.output_table("portfolio_metrics"), class_="mb-5 ps-3")),
+            ui.column(
+                12,
+                ui.tooltip(
+                    ui.div(ui.output_table("portfolio_table"), class_="mb-5"),
+                    "This table shows your portfolio composition, including symbol, shares, latest close price, and total value.",
+                ),
+            ),
         ),
     )
 )
@@ -248,9 +282,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         data = data_fetched.get()
         if data is None or data.empty:
             return pd.DataFrame({"Message": ["No data available. Please fetch data."]})
-        return data
-
-
+        return data.sort_values(by="Total Value", ascending=False)
 
     @output
     @render.plot
@@ -268,7 +300,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             return pd.DataFrame(
                 {"Message": ["No metrics available. Please fetch data."]}
             )
-        return metrics  # This should now be the DataFrame returned by calculate_portfolio_metrics
+        return metrics
 
     @output
     @render.plot
@@ -282,7 +314,6 @@ def server(input: Inputs, output: Outputs, session: Session):
         if data is None or data.empty:
             return None
         return create_risk_return_chart(data)
-
 
 
 # Create the Shiny app

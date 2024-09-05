@@ -11,7 +11,9 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 ## Demo
 
 ### Portfolio Dashboard
-![Portfolio Dashboard](./demo_pics/dashboard.png)
+![Portfolio Dashboard](./demo_pics/dashboard1.png)
+![Portfolio Dashboard](./demo_pics/dashboard2.png)
+
 *An example dashboard displaying a portfolio of stocks.*
 
 ### Input Overview
@@ -21,8 +23,23 @@ This project is a dashboard for tracking and analyzing stock portfolios.
 ## Setup
 
 1. Clone the repository
+
+```bash
+git clone https://github.com/roman91DE/portfolio_dashboard.git
+```
+
 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
 3. Set up your Alpha Vantage API key
+```bash
+export ALPHA_VANTAGE_API_KEY='your_api_key_here'
+```
+Or set the key in a .env file
+
 4. Run the application with:
 
 ```bash

@@ -80,12 +80,12 @@ def fetch_stock_data(symbol: str, api_key: str) -> tuple[pd.DataFrame, dict]:
 
         # Calculate 52-week change
         if len(df) >= 252:  # Approximately 252 trading days in a year
-            current_price = df['close'].iloc[0]
-            year_ago_price = df['close'].iloc[251]
+            current_price = df["close"].iloc[0]
+            year_ago_price = df["close"].iloc[251]
             week_52_change = (current_price - year_ago_price) / year_ago_price
-            overview_data['52WeekChange'] = f"{week_52_change:.4f}"
+            overview_data["52WeekChange"] = f"{week_52_change:.4f}"
         else:
-            overview_data['52WeekChange'] = "N/A"
+            overview_data["52WeekChange"] = "N/A"
 
         # Return all overview data
         return df, overview_data
@@ -124,7 +124,10 @@ def fetch_overview_from_api(symbol: str, api_key: str) -> dict:
     log_path.write_text(json.dumps(overview_data, indent=2))
 
     # Check for API limit reached
-    if "Information" in overview_data and "standard API rate limit" in overview_data["Information"]:
+    if (
+        "Information" in overview_data
+        and "standard API rate limit" in overview_data["Information"]
+    ):
         raise APILimitReachedException(
             "Alpha Vantage API daily limit reached. Please try again tomorrow or upgrade to a premium plan."
         )

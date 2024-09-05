@@ -40,14 +40,18 @@ def fetch_portfolio_data(
 
                 # Calculate 52-week change
                 if len(df) >= 252:  # Approximately 252 trading days in a year
-                    year_ago_price = df['close'].astype(float).iloc[min(251, len(df)-1)]
+                    year_ago_price = (
+                        df["close"].astype(float).iloc[min(251, len(df) - 1)]
+                    )
                     week_52_change = (latest_close - year_ago_price) / year_ago_price
                 else:
                     # If we don't have a full year of data, calculate change from the oldest available data point
-                    oldest_price = df['close'].astype(float).iloc[-1]
+                    oldest_price = df["close"].astype(float).iloc[-1]
                     week_52_change = (latest_close - oldest_price) / oldest_price
 
-                week_52_change = f"{week_52_change:.4f}"  # Convert to string with 4 decimal places
+                week_52_change = (
+                    f"{week_52_change:.4f}"  # Convert to string with 4 decimal places
+                )
 
                 portfolio_data.append(
                     {
@@ -88,23 +92,30 @@ def create_asset_allocation_chart(df: pd.DataFrame) -> plt.Figure:
 
     # Create lists for treemap input
     sizes = df_sorted["Total Value"].tolist()
-    labels = [f"{row['Symbol']}\n${row['Total Value']:,.0f}" for _, row in df_sorted.iterrows()]
+    labels = [
+        f"{row['Symbol']}\n${row['Total Value']:,.0f}"
+        for _, row in df_sorted.iterrows()
+    ]
     colors = plt.cm.viridis(np.linspace(0, 1, len(sizes)))
 
     # Create the treemap
     fig, ax = plt.subplots(figsize=(12, 8))
-    squarify.plot(sizes=sizes, label=labels, color=colors, alpha=0.8, text_kwargs={'fontsize':8})
-    
+    squarify.plot(
+        sizes=sizes, label=labels, color=colors, alpha=0.8, text_kwargs={"fontsize": 8}
+    )
+
     plt.title("Portfolio Composition", fontsize=16)
-    plt.axis('off')
-    
+    plt.axis("off")
+
     # Add a color bar to represent value
-    sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin=min(sizes), vmax=max(sizes)))
+    sm = plt.cm.ScalarMappable(
+        cmap=plt.cm.viridis, norm=plt.Normalize(vmin=min(sizes), vmax=max(sizes))
+    )
     sm.set_array([])
     cbar = plt.colorbar(sm)
-    cbar.set_label('Total Value ($)', rotation=270, labelpad=25)
+    cbar.set_label("Total Value ($)", rotation=270, labelpad=25)
 
-    plt.tight_layout()
+    plt.tight_layout(pad=3.0, rect=[0, 0.05, 1, 0.95])
     return fig
 
 
@@ -112,33 +123,46 @@ def create_sector_breakdown_chart(df: pd.DataFrame) -> plt.Figure:
     if "Error" in df.columns:
         return plt.Figure()
 
-    sector_allocation = df.groupby("Sector")["Total Value"].sum().sort_values(ascending=True)
-    
+    sector_allocation = (
+        df.groupby("Sector")["Total Value"].sum().sort_values(ascending=True)
+    )
+
     fig, ax = plt.subplots(figsize=(10, 6))
     bars = ax.barh(sector_allocation.index, sector_allocation.values)
-    
+
     # Add value labels to the end of each bar
     for bar in bars:
         width = bar.get_width()
-        ax.text(width, bar.get_y() + bar.get_height()/2, 
-                f'${width:,.0f}', 
-                ha='left', va='center', fontweight='bold')
-    
+        ax.text(
+            width,
+            bar.get_y() + bar.get_height() / 2,
+            f"${width:,.0f}",
+            ha="left",
+            va="center",
+            fontweight="bold",
+        )
+
     # Add percentage labels inside each bar
     total = sector_allocation.sum()
     for bar in bars:
         width = bar.get_width()
         percentage = (width / total) * 100
-        ax.text(width/2, bar.get_y() + bar.get_height()/2, 
-                f'{percentage:.1f}%', 
-                ha='center', va='center', fontweight='bold', color='white')
-    
+        ax.text(
+            width / 2,
+            bar.get_y() + bar.get_height() / 2,
+            f"{percentage:.1f}%",
+            ha="center",
+            va="center",
+            fontweight="bold",
+            color="white",
+        )
+
     ax.set_title("Sector Breakdown", fontsize=16)
     ax.set_xlabel("Total Value ($)")
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    
-    plt.tight_layout()
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    plt.tight_layout(pad=3.0, rect=[0, 0.05, 1, 0.95])
     return fig
 
 
@@ -149,14 +173,32 @@ def calculate_portfolio_metrics(df: pd.DataFrame) -> pd.DataFrame:
         "Total Portfolio Value": total_value,
         "Number of Assets": len(df),
         "Average Asset Value": total_value / len(df) if len(df) > 0 else 0,
-        "Highest Value Asset": df.loc[df["Total Value"].idxmax(), "Symbol"] if not df.empty else "N/A",
-        "Lowest Value Asset": df.loc[df["Total Value"].idxmin(), "Symbol"] if not df.empty else "N/A",
-        "Most Shares Held": df.loc[df["Shares"].idxmax(), "Symbol"] if not df.empty else "N/A",
-        "Least Shares Held": df.loc[df["Shares"].idxmin(), "Symbol"] if not df.empty else "N/A",
-        "Highest Price Asset": df.loc[df["Latest Close"].idxmax(), "Symbol"] if not df.empty else "N/A",
-        "Lowest Price Asset": df.loc[df["Latest Close"].idxmin(), "Symbol"] if not df.empty else "N/A",
-        "Number of Sectors": df["Sector"].nunique() if "Sector" in df.columns else "N/A",
-        "Most Represented Sector": df.groupby("Sector")["Total Value"].sum().idxmax() if "Sector" in df.columns else "N/A",
+        "Highest Value Asset": (
+            df.loc[df["Total Value"].idxmax(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Lowest Value Asset": (
+            df.loc[df["Total Value"].idxmin(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Most Shares Held": (
+            df.loc[df["Shares"].idxmax(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Least Shares Held": (
+            df.loc[df["Shares"].idxmin(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Highest Price Asset": (
+            df.loc[df["Latest Close"].idxmax(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Lowest Price Asset": (
+            df.loc[df["Latest Close"].idxmin(), "Symbol"] if not df.empty else "N/A"
+        ),
+        "Number of Sectors": (
+            df["Sector"].nunique() if "Sector" in df.columns else "N/A"
+        ),
+        "Most Represented Sector": (
+            df.groupby("Sector")["Total Value"].sum().idxmax()
+            if "Sector" in df.columns
+            else "N/A"
+        ),
     }
 
     return pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"])
@@ -200,9 +242,9 @@ def create_portfolio_performance_chart(portfolio_data):
     ax.set_title("Portfolio Performance Over Time")
     ax.set_xlabel("Date")
     ax.set_ylabel("Value ($)")
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small')
+    ax.legend(loc="center left", bbox_to_anchor=(1, 0.5), fontsize="small")
     ax.grid(True)
-    plt.tight_layout()
+    plt.tight_layout(pad=3.0, rect=[0, 0.05, 1, 0.95])
 
     return fig
 
@@ -212,42 +254,53 @@ def create_risk_return_chart(df: pd.DataFrame) -> plt.Figure:
         return plt.Figure()
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    
+
     print("Debug: DataFrame columns:", df.columns)
-    print("Debug: Beta values:", df['Beta'])
-    print("Debug: 52WeekChange values:", df['52WeekChange'])
-    
-    x = df['Beta'].apply(lambda x: float(x) if x not in ["N/A", None] else np.nan)
-    y = df['52WeekChange'].apply(lambda x: float(x) if x not in ["N/A", None] else np.nan) * 100
-    
+    print("Debug: Beta values:", df["Beta"])
+    print("Debug: 52WeekChange values:", df["52WeekChange"])
+
+    x = df["Beta"].apply(lambda x: float(x) if x not in ["N/A", None] else np.nan)
+    y = (
+        df["52WeekChange"].apply(
+            lambda x: float(x) if x not in ["N/A", None] else np.nan
+        )
+        * 100
+    )
+
     print("Debug: Converted x values:", x)
     print("Debug: Converted y values:", y)
-    
+
     # Remove rows with NaN values
     valid_data = df[~(np.isnan(x) | np.isnan(y))]
     x = x[~np.isnan(x) & ~np.isnan(y)]
     y = y[~np.isnan(x) & ~np.isnan(y)]
-    
+
     print("Debug: Valid data points:", len(valid_data))
-    
+
     if len(valid_data) == 0:
-        ax.text(0.5, 0.5, "No valid data points for Risk-Return chart", 
-                ha='center', va='center', transform=ax.transAxes)
+        ax.text(
+            0.5,
+            0.5,
+            "No valid data points for Risk-Return chart",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
         return fig
-    
-    size = valid_data['Total Value'] / valid_data['Total Value'].max() * 500
-    
-    scatter = ax.scatter(x, y, 
-                         s=size,
-                         c=valid_data['Sector'].astype('category').cat.codes,
-                         alpha=0.6)
-    
-    for i, txt in enumerate(valid_data['Symbol']):
+
+    size = valid_data["Total Value"] / valid_data["Total Value"].max() * 500
+
+    scatter = ax.scatter(
+        x, y, s=size, c=valid_data["Sector"].astype("category").cat.codes, alpha=0.6
+    )
+
+    for i, txt in enumerate(valid_data["Symbol"]):
         ax.annotate(txt, (x.iloc[i], y.iloc[i]))
-    
-    ax.set_xlabel('Beta (Risk)')
-    ax.set_ylabel('52 Week Change (%)')
-    ax.set_title('Risk-Return Analysis of Portfolio')
-    plt.colorbar(scatter, label='Sector')
-    
+
+    ax.set_xlabel("Beta (Risk)")
+    ax.set_ylabel("52 Week Change (%)")
+    ax.set_title("Risk-Return Analysis of Portfolio")
+    plt.colorbar(scatter, label="Sector")
+
+    plt.tight_layout(pad=3.0, rect=[0, 0.05, 1, 0.95])
     return fig
